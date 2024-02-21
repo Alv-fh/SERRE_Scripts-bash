@@ -1,0 +1,100 @@
+#!/bin/bash
+
+opc=0
+while true
+do
+	echo "====================== MENU GESTION DHCP ========================"
+	echo "             1.-Pedir una IP e indique si esta en uso."
+	echo "             2.-Cuantas IP distintas ha servido."
+	echo "             3.-La MAC de una determinada IP."
+	echo "             4.-La hora en que ha sido servida una IP."
+	echo "             5.-Indica si el servicio esta activo."
+	echo "             6.-Salir"
+	echo "================================================================="
+	echo ""
+	read -p"Herramienta->> " opc
+	case $opc in
+	1)
+		encontrado=False
+		read -p"IP->> " ip
+                while read  LINEA
+                do
+                	pal1=`echo $LINEA | cut -f 1 -d" "`
+                        if [ $pal1 == "lease" ] &>/dev/null
+                        then
+                        	ipcortada=`echo $LINEA | cut -f 2 -d" "`
+                        if [ $ip == $ipcortada ] &>/dev/null
+                        then
+                                encontrado=True
+                                break
+                        fi
+                        fi
+ 		done < dhcpd.leases
+                if [ $encontrado == True ] &>/dev/null
+                then
+                	echo "Existe"
+                else
+                        echo "No existe"
+                fi
+	;;
+	2)
+		num_ips=$(grep -c "lease" dhcpd.leases)
+		let num_ips-=1
+		echo "El servidor DHCP ha servido $num_ips IP distintas."
+	;;
+	3)
+		contador=0
+		read -p"IP->> " ip
+		while read  LINEA
+		do
+			pal1=`echo $LINEA | cut -f 1 -d" "`
+			if [ $pal1 == "lease" ] &>/dev/null
+			then
+				ipcortada=`echo $LINEA | cut -f 2 -d" "`
+				if [ $ip == $ipcortada ] &>/dev/null
+				then
+					contador=0
+				fi
+			fi
+			let contador=$contador+1
+			if [ $contador -eq 7 ] && [ $ip == $ipcortada ] &>/dev/null
+			then
+				mac=`echo $LINEA | cut -f3 -d" "`
+				macfinal=`echo $mac | cut -f1 -d";"`
+				echo "MAC-> $macfinal"
+			fi
+		done < dhcpd.leases
+	;;
+	4)
+		contador=0
+		read -p"IP->> " ip
+		while read  LINEA
+		do
+			pal1=`echo $LINEA | cut -f 1 -d" "`
+			if [ $pal1 == "lease" ] &>/dev/null
+			then
+				ipcortada=`echo $LINEA | cut -f 2 -d" "`
+				if [ $ip == $ipcortada ] &>/dev/null
+				then
+					contador=0
+				fi
+			fi
+			let contador=$contador+1
+			if [ $contador -eq 2 ] && [ $ip == $ipcortada ] &>/dev/null
+			then
+				hora=`echo $LINEA | cut -f4 -d" " | cut -f1 -d";"`
+				echo "Hora-> $hora"
+			fi
+		done < dhcpd.leases
+	;;
+	5)
+		sudo service isc-dhcp-server status
+	;;
+	6)
+		echo "Salida exitosa"
+		break
+	;;
+	*)
+		echo "Opcion invalida"
+	esac
+done
