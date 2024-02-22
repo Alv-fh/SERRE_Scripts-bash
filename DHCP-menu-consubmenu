@@ -9,7 +9,8 @@ do
 	echo "             3.-La MAC de una determinada IP."
 	echo "             4.-La hora en que ha sido servida una IP."
 	echo "             5.-Indica si el servicio esta activo."
-	echo "             6.-Salir"
+	echo "             6.Servicios"
+	echo "		   7.-Salir"
 	echo "================================================================="
 	echo ""
 	read -p"Herramienta->> " opc
@@ -90,11 +91,46 @@ do
 	5)
 		sudo service isc-dhcp-server status
 	;;
-	6)
+	7)
 		echo "Salida exitosa"
 		break
 	;;
-	*)
-		echo "Opcion invalida"
+	6)
+		opcservice=0
+		echo "===================MENU SERVICIOS=================================="
+		echo "		1.-Ver las IP de quien ha entrado a tu servicio web de apache"
+		echo "		2.-Ver estado de Apache2"
+		echo "		3.-Reiniciar Apache2"
+		echo "		4.-Salir"
+		echo "==================================================================="
+
+		read -p"Opcion: " opcservice
+
+		case $opcservice in
+		1)
+			while read LINEA
+			do
+				ip=`echo $LINEA	| cut -f1 -d" "`
+				echo $ip
+			done < /var/log/apache2/access.log
+
+		;;
+		2)
+			sudo systemctl status apache2 
+		;;
+		3)
+			sudo systemctl restart apache2
+			if [ $? -eq 0 ] &>/dev/null
+			then
+				echo "Reinicio completado"
+			else
+				echo "Fallo al reiniciar"
+			fi
+		;;
+		4)
+			echo "Salida exitosa"
+		;;
+		esac
+	;;
 	esac
-done
+	done
